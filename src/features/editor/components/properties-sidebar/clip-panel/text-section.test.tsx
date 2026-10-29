@@ -153,6 +153,22 @@ describe('TextContentSection', () => {
     expect(spans.map((span) => span.text)).toEqual(['Edited', 'Headline'])
   })
 
+  it('keeps the focused span field when its text changes', () => {
+    const view = renderSection([SPAN_TEXT])
+    const field = screen.getByPlaceholderText('editor.textSection.titleText')
+    field.focus()
+    const updated = { ...SPAN_TEXT, textSpans: [{ text: 'Edited' }, { text: 'Headline' }] }
+
+    view.rerender(
+      <TooltipProvider>
+        <TextContentSection items={[updated]} canvas={CANVAS} />
+      </TooltipProvider>,
+    )
+
+    expect(screen.getByPlaceholderText('editor.textSection.titleText')).toBe(field)
+    expect(field).toHaveFocus()
+  })
+
   it('shows the mixed placeholder when the selection disagrees on the text', () => {
     renderSection([TEXT, { ...SECOND_TEXT, text: 'Other' }])
 
