@@ -143,7 +143,7 @@ export function TextSpanEditors({
         const emphasis = getSpanEditorEmphasis(span, fallbackItem)
 
         return (
-          <div key={`${index}:${span.text}`} className="rounded-md border border-border/70 p-2">
+          <div key={index} className="rounded-md border border-border/70 p-2">
             <PropertyGroupHeader className="pb-2">{config.label}</PropertyGroupHeader>
             <Textarea
               value={span.text}

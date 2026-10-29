@@ -390,9 +390,18 @@ const DeferredClipPanel = memo(function DeferredClipPanel({
   snapshot: ClipPanelSnapshot
 }) {
   const deferredSnapshot = useDeferredValue(snapshot)
+  // Controlled text fields must receive edits synchronously to retain the caret.
+  const textChanged = snapshot.selectedItems.some((item, index) => {
+    const deferredItem = deferredSnapshot.selectedItems[index]
+    return (
+      item.type === 'text' &&
+      deferredItem?.type === 'text' &&
+      item.text !== deferredItem.text
+    )
+  })
   return (
     <ClipPanelCore
-      selectedItems={deferredSnapshot.selectedItems}
+      selectedItems={textChanged ? snapshot.selectedItems : deferredSnapshot.selectedItems}
       audioPanelItems={deferredSnapshot.audioPanelItems}
     />
   )
