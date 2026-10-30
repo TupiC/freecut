@@ -91,22 +91,34 @@ export function LayoutEditor() {
   const setPosition = useEditorStore((s) => s.setPanelPosition)
   const workspace = useEditorStore((s) => s.workspace)
   const surface = t(workspace === 'color' ? 'toolbar.layout.grading' : 'toolbar.layout.timeline')
+  const overlayRef = useRef<HTMLDivElement>(null)
   const activePositionRef = useRef<HTMLButtonElement>(null)
   const [dropTarget, setDropTarget] = useState<EditorPanelPosition | null>(null)
 
   useEffect(() => {
     if (!editing) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      // Capture phase: close the editor without also clearing timeline selection.
-      event.stopPropagation()
-      setEditing(false)
+    // Window capture runs before the editor's document-level capture hotkeys, so
+    // Space/Delete/... never reach the surfaces hidden behind the overlay.
+    // Stopping propagation keeps default actions, so buttons still activate.
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target
+      const withinOverlay =
+        target === document.body ||
+        (target instanceof Node && !!overlayRef.current?.contains(target))
+      if (event.key === 'Escape' && event.type === 'keydown') {
+        event.stopPropagation()
+        setEditing(false)
+        return
+      }
+      if (withinOverlay) event.stopPropagation()
     }
-    window.addEventListener('keydown', onKeyDown, true)
+    window.addEventListener('keydown', onKey, true)
+    window.addEventListener('keyup', onKey, true)
     const focusFrame = requestAnimationFrame(() => activePositionRef.current?.focus())
     return () => {
       cancelAnimationFrame(focusFrame)
-      window.removeEventListener('keydown', onKeyDown, true)
+      window.removeEventListener('keydown', onKey, true)
+      window.removeEventListener('keyup', onKey, true)
       document.querySelector<HTMLButtonElement>('[data-layout-trigger]')?.focus()
     }
   }, [editing, setEditing])
@@ -114,11 +126,12 @@ export function LayoutEditor() {
   if (!editing) return null
   return (
     <div
-      className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 bg-background/85 p-4"
+      ref={overlayRef}
+      // Focusable so clicking empty overlay space keeps keys inside the editor.
+      tabIndex={-1}
+      className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 bg-background/85 p-4 outline-none"
       role="region"
       aria-label={t('toolbar.layout.edit')}
-      // Keep editor hotkeys (Space, Delete, ...) away from the surfaces hidden behind the overlay.
-      onKeyDown={(event) => event.stopPropagation()}
     >
       <div className="text-center">
         <p className="text-sm font-semibold">{t('toolbar.layout.edit')}</p>

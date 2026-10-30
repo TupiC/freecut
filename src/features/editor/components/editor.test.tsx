@@ -86,7 +86,9 @@ vi.mock('./preview-area', () => ({
 }))
 
 vi.mock('./color-grading-dock', () => ({
-  ColorGradingDock: () => <div data-testid="color-grading-dock" />,
+  ColorGradingDock: ({ stacked }: { stacked?: boolean }) => (
+    <div data-testid="color-grading-dock" data-stacked={String(Boolean(stacked))} />
+  ),
 }))
 
 vi.mock('./color-timeline-navigator', () => ({
@@ -472,10 +474,26 @@ describe('LoadedEditor migration metadata refresh', () => {
       />,
     )
 
-    expect(await screen.findByTestId('color-grading-dock')).toBeInTheDocument()
+    expect(await screen.findByTestId('color-grading-dock')).toHaveAttribute('data-stacked', 'false')
     expect(screen.getByTestId('color-timeline-navigator')).toBeInTheDocument()
     expect(screen.queryByTestId('timeline')).not.toBeInTheDocument()
     expect(screen.queryByTestId('properties-sidebar')).not.toBeInTheDocument()
+  })
+
+  it('stacks the grading dock when it sits beside the preview', async () => {
+    mocks.editorState.workspace = 'color'
+    mocks.editorState.panelPosition = 'right'
+    mocks.editorState.propertiesFullColumn = true
+
+    render(
+      <LoadedEditor
+        projectId="project-1"
+        project={{ id: 'project-1', name: 'Color Project', width: 1920, height: 1080, fps: 30 }}
+        migration={{ storedSchemaVersion: 9, currentSchemaVersion: 9, requiresUpgrade: false }}
+      />,
+    )
+
+    expect(await screen.findByTestId('color-grading-dock')).toHaveAttribute('data-stacked', 'true')
   })
 
   it('mounts Motion in the shared editor shell and swaps only the classic Timeline', async () => {

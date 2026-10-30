@@ -644,7 +644,7 @@ export const LoadedEditor = memo(function LoadedEditor({
         <InteractionLockRegion locked={isMaskEditingActive} className="h-full overflow-auto">
           <ErrorBoundary level="feature">
             <Suspense fallback={null}>
-              <LazyColorGradingDock />
+              <LazyColorGradingDock stacked={splitDirection === 'horizontal'} />
             </Suspense>
           </ErrorBoundary>
         </InteractionLockRegion>
